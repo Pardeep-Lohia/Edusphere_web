@@ -1,0 +1,2 @@
+C:/Users/parde/Downloads/cgc/flutter_application_1/android/app/.cxx/Debug/o1s6f2a2/x86/CMakeFiles/edit_cache.dir
+C:/Users/parde/Downloads/cgc/flutter_application_1/android/app/.cxx/Debug/o1s6f2a2/x86/CMakeFiles/rebuild_cache.dir

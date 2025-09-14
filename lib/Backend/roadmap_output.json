@@ -1,0 +1,175 @@
+{
+    "topic": "Python",
+    "duration": 10,
+    "progress": [
+        {
+            "day": 1,
+            "task": "Introduction to Python: Setting up your environment (installation, IDE/editor), basic syntax (print, variables, data types: integers, floats, strings, booleans), and comments.",
+            "quiz": [
+                {
+                    "question": "What is the correct way to print 'Hello, world!' in Python?",
+                    "options": [
+                        "print('Hello, world!')",
+                        "echo 'Hello, world!'",
+                        "System.out.println('Hello, world!');",
+                        "console.log('Hello, world!');"
+                    ],
+                    "answer": "print('Hello, world!')"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 2,
+            "task": "Operators in Python: Arithmetic operators (+, -, *, /, //, %, **), comparison operators (==, !=, >, <, >=, <=), logical operators (and, or, not), assignment operators (=, +=, -=, *=, /=).",
+            "quiz": [
+                {
+                    "question": "What is the result of 10 % 3?",
+                    "options": [
+                        "3",
+                        "3.33",
+                        "1",
+                        "0"
+                    ],
+                    "answer": "1"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 3,
+            "task": "Control flow: if, elif, else statements. Practice writing conditional logic.",
+            "quiz": [
+                {
+                    "question": "What will be printed if x = 5? \n if x > 10: \n  print('A') \n elif x > 5: \n  print('B') \n else: \n  print('C')",
+                    "options": [
+                        "A",
+                        "B",
+                        "C"
+                    ],
+                    "answer": "C"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 4,
+            "task": "Loops: for and while loops. Practice iterating through sequences (lists, strings, tuples).",
+            "quiz": [
+                {
+                    "question": "What is the output of the following code? \n for i in range(3): \n  print(i)",
+                    "options": [
+                        "0 1 2",
+                        "1 2 3",
+                        "0 1 2 3",
+                        "Error"
+                    ],
+                    "answer": "0 1 2"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 5,
+            "task": "Data structures: Lists, tuples. Learn about their properties, methods, and how to manipulate them.",
+            "quiz": [
+                {
+                    "question": "What is the difference between a list and a tuple in Python?",
+                    "options": [
+                        "Lists are mutable, tuples are immutable",
+                        "Lists are immutable, tuples are mutable",
+                        "There is no difference",
+                        "Lists are ordered, tuples are unordered"
+                    ],
+                    "answer": "Lists are mutable, tuples are immutable"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 6,
+            "task": "Data structures: Dictionaries. Learn about key-value pairs, accessing values, adding/removing elements.",
+            "quiz": [
+                {
+                    "question": "How do you access the value associated with the key 'name' in the dictionary {'name': 'Alice', 'age': 30}?",
+                    "options": [
+                        "{'name': 'Alice'}",
+                        "['name']",
+                        "my_dict['name']",
+                        "my_dict.name"
+                    ],
+                    "answer": "my_dict['name']"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 7,
+            "task": "Functions: Defining and calling functions, parameters, return values, scope.",
+            "quiz": [
+                {
+                    "question": "What keyword is used to define a function in Python?",
+                    "options": [
+                        "function",
+                        "def",
+                        "func",
+                        "procedure"
+                    ],
+                    "answer": "def"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 8,
+            "task": "String manipulation: Common string methods (upper(), lower(), split(), join(), replace()), string formatting.",
+            "quiz": [
+                {
+                    "question": "What will the following code print? \n my_string = 'hello world' \n print(my_string.upper())",
+                    "options": [
+                        "hello world",
+                        "Hello World",
+                        "HELLO WORLD",
+                        "helloworld"
+                    ],
+                    "answer": "HELLO WORLD"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 9,
+            "task": "Working with files: Opening, reading, writing, and closing files. Error handling (try-except blocks).",
+            "quiz": [
+                {
+                    "question": "What function is used to open a file in Python?",
+                    "options": [
+                        "open()",
+                        "read()",
+                        "write()",
+                        "close()"
+                    ],
+                    "answer": "open()"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 10,
+            "task": "Introduction to modules and packages: Importing and using external libraries (e.g., math, random).",
+            "quiz": [
+                {
+                    "question": "How do you import the math module in Python?",
+                    "options": [
+                        "import math",
+                        "include math",
+                        "use math",
+                        "require math"
+                    ],
+                    "answer": "import math"
+                }
+            ],
+            "completed": false
+        }
+    ]
+}

@@ -1,0 +1,146 @@
+{
+    "topic": "Flutter",
+    "duration": 5,
+    "progress": [
+        {
+            "day": 1,
+            "task": "Introduction to Flutter and Setting up the Environment",
+            "description": "Learn about Flutter's advantages, architecture, and installation process. Set up your development environment with Flutter SDK, Android Studio/VS Code, and necessary emulators/devices.",
+            "quiz": [
+                {
+                    "question": "What is Flutter?",
+                    "options": [
+                        "A mobile operating system",
+                        "A cross-platform UI toolkit",
+                        "A programming language",
+                        "A database management system"
+                    ],
+                    "answer": "A cross-platform UI toolkit"
+                },
+                {
+                    "question": "Which language is used to develop Flutter apps?",
+                    "options": [
+                        "Java",
+                        "Kotlin",
+                        "Dart",
+                        "Swift"
+                    ],
+                    "answer": "Dart"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 2,
+            "task": "Building Basic UI Widgets and Layouts",
+            "description": "Explore fundamental Flutter widgets like Text, Image, Button, and Container. Learn about layout mechanisms such as Row, Column, Stack, and understand how to arrange widgets effectively.",
+            "quiz": [
+                {
+                    "question": "What is the purpose of the 'StatelessWidget' class?",
+                    "options": [
+                        "To manage stateful data",
+                        "To build widgets that don't change dynamically",
+                        "To handle user input",
+                        "To create animations"
+                    ],
+                    "answer": "To build widgets that don't change dynamically"
+                },
+                {
+                    "question": "Which widget is used for displaying images in Flutter?",
+                    "options": [
+                        "Image",
+                        "Picture",
+                        "Icon",
+                        "ImageIcon"
+                    ],
+                    "answer": "Image"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 3,
+            "task": "State Management with Stateful Widgets and Provider",
+            "description": "Understand the concept of state in Flutter and learn how to build interactive apps using Stateful Widgets. Introduce the Provider package for efficient state management and data sharing between widgets.",
+            "quiz": [
+                {
+                    "question": "What is the difference between 'StatelessWidget' and 'StatefulWidget'?",
+                    "options": [
+                        "StatelessWidget is used for static UI, StatefulWidget is for dynamic UI",
+                        "StatelessWidget is for complex apps, StatefulWidget is for simple apps",
+                        "StatelessWidget uses Dart, StatefulWidget uses Java",
+                        "There is no difference"
+                    ],
+                    "answer": "StatelessWidget is used for static UI, StatefulWidget is for dynamic UI"
+                },
+                {
+                    "question": "What is the role of the 'setState' method?",
+                    "options": [
+                        "To rebuild the widget tree",
+                        "To initialize the state",
+                        "To dispose of the widget",
+                        "To handle user input"
+                    ],
+                    "answer": "To rebuild the widget tree"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 4,
+            "task": "Navigation and Routing",
+            "description": "Learn how to navigate between different screens in a Flutter app using routes and the Navigator widget.  Explore various navigation patterns and understand how to pass data between screens.",
+            "quiz": [
+                {
+                    "question": "Which class is used for navigation in Flutter?",
+                    "options": [
+                        "Route",
+                        "Navigator",
+                        "Screen",
+                        "Page"
+                    ],
+                    "answer": "Navigator"
+                },
+                {
+                    "question": "What is the purpose of the 'push' method in navigation?",
+                    "options": [
+                        "To navigate to a new screen",
+                        "To go back to the previous screen",
+                        "To exit the app",
+                        "To refresh the current screen"
+                    ],
+                    "answer": "To navigate to a new screen"
+                }
+            ],
+            "completed": false
+        },
+        {
+            "day": 5,
+            "task": "Working with APIs and Data Persistence",
+            "description": "Learn how to make HTTP requests to fetch data from APIs using packages like 'http'. Explore data persistence options like shared preferences, SQLite, and understand how to store and retrieve data locally.",
+            "quiz": [
+                {
+                    "question": "Which package is commonly used for making HTTP requests in Flutter?",
+                    "options": [
+                        "http",
+                        "network",
+                        "api",
+                        "request"
+                    ],
+                    "answer": "http"
+                },
+                {
+                    "question": "What is data persistence?",
+                    "options": [
+                        "Storing data temporarily in memory",
+                        "Storing data permanently on the device",
+                        "Sending data to a server",
+                        "Retrieving data from an API"
+                    ],
+                    "answer": "Storing data permanently on the device"
+                }
+            ],
+            "completed": false
+        }
+    ]
+}
