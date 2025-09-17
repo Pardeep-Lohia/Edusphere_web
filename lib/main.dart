@@ -5,6 +5,7 @@ import 'package:flutter_application_1/AuthenticationScreens/LoginScreen.dart'
 import 'package:flutter_application_1/AuthenticationScreens/SignUp.dart';
 import 'package:flutter_application_1/Screens/CommunityScreen.dart';
 import 'package:flutter_application_1/Screens/HomeScreenFinal.dart';
+import 'package:flutter_application_1/user_provider.dart';
 // import 'package:flutter_application_1/Screens/HomeScreen.dart';
 // import 'package:flutter_application_1/Screens/HomeScreennew.dart';
 // import 'package:flutter_application_1/Screens/InputForRoadmapScreen.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_application_1/Screens/RippleEffectOfRoadmapScreen.dart';
 import 'package:flutter_application_1/Screens/TestScreen.dart';
 import 'package:flutter_application_1/SplashScreen/SplashScreen.dart';
 import 'package:flutter_application_1/firebase_options.dart';
+import 'package:flutter_application_1/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,14 +29,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      // home: CommunityPage(userId: "LbuQm4OJMUMo6AeC96xgq8elHJH3"),
-      // home: CommunityPage(userId: "QXyx9HP6SrXKefA7ZRmYgSog0L02"),
-      // home: HomeScreen(),
-      home: Splashscreen(),
-      // routes: {'/home': (context) => HomeScreen()},
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+      ],
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'LearnSphere',
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.currentTheme,
+            home: Splashscreen(),
+          );
+        },
+      ),
     );
   }
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/Screens/HomeScreenFinal.dart';
+import 'package:flutter_application_1/user_provider.dart';
+import 'package:provider/provider.dart';
 import 'SignUp.dart';
+import 'ForgotPassword.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -39,19 +42,27 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      String? uid = userCredential.user?.uid;
-      print("Login Successful: UID = $uid");
+      User? user = userCredential.user;
+      print("Login Successful: UID = ${user?.uid}");
 
-      // Navigate to Home Screen with UID
-      if (uid != null) {
+      // Check email verification
+      if (user != null && !user.emailVerified) {
+        await _auth.signOut();
+        _showError("Please verify your email before logging in. Check your email for verification link.");
+        return;
+      }
+
+      // Set user in provider
+      if (user != null) {
+        Provider.of<UserProvider>(context, listen: false).setUser(user);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(uid: uid),
+            builder: (context) => HomeScreen(),
           ),
         );
       } else {
-        _showError("User ID is null");
+        _showError("User is null");
       }
     } on FirebaseAuthException catch (e) {
       _showError(e.message ?? "Login failed");
@@ -70,8 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -79,11 +91,11 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 350,
             padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color: theme.colorScheme.onSurface.withOpacity(0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -100,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.5),
+                          color: theme.colorScheme.primary.withOpacity(0.5),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -116,12 +128,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 10),
                   Text(
                     "Welcome",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
                   ),
                   SizedBox(height: 5),
                   Text(
                     "Please enter your details to sign in",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(fontSize: 14, color: theme.textTheme.bodyMedium?.color),
                   ),
                   SizedBox(height: 20),
 
@@ -186,14 +198,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          // Implement Forgot Password Logic
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Forgot password clicked!")),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
                           );
                         },
                         child: Text(
                           "Forgot password?",
-                          style: TextStyle(color: Colors.blue),
+                          style: TextStyle(color: theme.colorScheme.primary),
                         ),
                       ),
                     ],
@@ -208,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.facebook, color: Colors.blue),
+                        icon: Icon(Icons.facebook, color: Color(0xFF1877F2)),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Facebook login")),
@@ -216,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.g_mobiledata, color: Colors.red),
+                        icon: Icon(Icons.g_mobiledata, color: Color(0xFFDB4437)),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Google login")),
@@ -224,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.apple, color: Colors.black),
+                        icon: Icon(Icons.apple, color: theme.colorScheme.onSurface),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Apple login")),
@@ -256,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? CircularProgressIndicator()
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
+                            backgroundColor: theme.colorScheme.primary,
                             minimumSize: Size(double.infinity, 50),
                           ),
                           onPressed: () {
@@ -265,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           },
                           child: Text("Sign In",
-                              style: TextStyle(color: Colors.white)),
+                              style: TextStyle(color: theme.colorScheme.onPrimary)),
                         ),
                   SizedBox(height: 10),
 

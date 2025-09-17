@@ -168,12 +168,35 @@ def generate_roadmap():
 
 @app.route('/get_roadmap', methods=['GET'])
 def get_roadmap():
+    return jsonify({"error": "Use /get_user_roadmap with uid parameter"}), 400
+
+from google.cloud import firestore
+
+@app.route('/get_user_roadmap', methods=['GET'])
+def get_user_roadmap():
+    uid = request.args.get('uid')
+    if not uid:
+        return jsonify({"error": "uid parameter is required"}), 400
     try:
-        with open(ROADMAP_FILE, "r", encoding="utf-8") as file:
-            roadmap_data = json.load(file)
-        return jsonify(roadmap_data)
-    except FileNotFoundError:
-        return jsonify({"error": "No roadmap found. Generate one first!"}), 404
+        # Initialize Firestore client
+        fs_client = firestore.Client()
+
+        # Query public roadmaps
+        public_roadmaps_query = fs_client.collection('roadmaps').where('isPublic', '==', True)
+        public_roadmaps_docs = public_roadmaps_query.stream()
+        public_roadmaps = [doc.to_dict() for doc in public_roadmaps_docs]
+
+        # Query user-owned roadmaps
+        user_roadmaps_query = fs_client.collection('roadmaps').where('ownerUid', '==', uid)
+        user_roadmaps_docs = user_roadmaps_query.stream()
+        user_roadmaps = [doc.to_dict() for doc in user_roadmaps_docs]
+
+        # Combine and return
+        combined_roadmaps = public_roadmaps + user_roadmaps
+
+        return jsonify({"roadmaps": combined_roadmaps})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/update_progress', methods=['POST'])
 def update_progress():

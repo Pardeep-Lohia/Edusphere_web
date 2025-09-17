@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/BaseUrl.dart';
 import 'package:flutter_application_1/Screens/RippleEffectOfRoadmapScreen.dart';
@@ -113,17 +114,28 @@ class _InputScreenState extends State<InputScreen> {
         body: jsonEncode({"topic": topic, "duration": duration, "user_id": widget.uid}),
       );
 
-      if (response.statusCode == 200) {
-        Map<String, dynamic> roadmapData = jsonDecode(response.body);
-        List<Map<String, dynamic>> roadmap =
-            List<Map<String, dynamic>>.from(roadmapData["progress"]);
+        if (response.statusCode == 200) {
+          Map<String, dynamic> roadmapData = jsonDecode(response.body);
+          List<Map<String, dynamic>> roadmap =
+              List<Map<String, dynamic>>.from(roadmapData["progress"]);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => RoadmapScreen(roadmap: roadmap)),
-        );
-      } else {
+          // Store the generated roadmap in Firebase under 'user_roadmaps' collection
+          DocumentReference docRef = await FirebaseFirestore.instance.collection('user_roadmaps').add({
+            'user_id': widget.uid,
+            'topic': roadmapData['topic'] ?? '',
+            'progress': roadmapData['progress'] ?? [],
+            'created_at': FieldValue.serverTimestamp(),
+          });
+
+          // Add the document ID to roadmapData for updates in RoadmapScreen
+          roadmapData['id'] = docRef.id;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RoadmapScreen(roadmapData: roadmapData)),
+          );
+        } else {
         Navigator.pop(context); // Close loading screen on failure
         setState(() {
           _errorMessage =
@@ -143,11 +155,12 @@ class _InputScreenState extends State<InputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: Text("Create Roadmap"),
-        backgroundColor: Colors.black,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
         elevation: 2,
       ),
@@ -158,7 +171,7 @@ class _InputScreenState extends State<InputScreen> {
           children: [
             Text("Enter Details",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: theme.textTheme.bodyLarge?.color,
                     fontSize: 20,
                     fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
@@ -199,19 +212,19 @@ class _InputScreenState extends State<InputScreen> {
                 : SizedBox.shrink(),
             SizedBox(height: 10),
             _isLoading
-                ? Center(child: CircularProgressIndicator(color: Colors.white))
+                ? Center(child: CircularProgressIndicator(color: theme.colorScheme.primary))
                 : SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () => generateRoadmap(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: theme.colorScheme.primary,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       child: Text("Generate Roadmap",
-                          style: TextStyle(fontSize: 18, color: Colors.white)),
+                          style: TextStyle(fontSize: 18, color: theme.colorScheme.onPrimary)),
                     ),
                   ),
           ],
@@ -226,21 +239,22 @@ class _InputScreenState extends State<InputScreen> {
     required IconData icon,
     bool isNumeric = false,
   }) {
+    final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.black54,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.3)),
       ),
       child: TextField(
         controller: controller,
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: theme.textTheme.bodyLarge?.color),
         keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
         decoration: InputDecoration(
-          icon: Icon(icon, color: Colors.white70),
+          icon: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7)),
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white60),
+          hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
           border: InputBorder.none,
         ),
       ),

@@ -3,21 +3,24 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/AuthenticationScreens/LoginScreen.dart';
 import 'package:flutter_application_1/Screens/BaseUrl.dart';
 import 'package:flutter_application_1/Screens/CommunityScreen.dart';
 import 'package:flutter_application_1/Screens/Data.dart';
 import 'package:flutter_application_1/Screens/InputForRoadmapScreen.dart';
 import 'package:flutter_application_1/Screens/RoadmapScreen.dart';
+import 'package:flutter_application_1/theme_provider.dart';
+import 'package:flutter_application_1/user_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String uid;
-
-  const HomeScreen({Key? key, required this.uid}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -34,18 +37,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    final uid = user?.uid ?? '';
+
     final List<Widget> _screens = [
-      HomeContentScreen(uid: widget.uid),
-      UploadScreen(uid: widget.uid),
-      ChatScreen(uid: widget.uid),
-      ProfileScreen(uid: widget.uid),
+      HomeContentScreen(uid: uid),
+      UploadScreen(uid: uid),
+      ChatScreen(uid: uid),
+      ProfileScreen(uid: uid),
     ];
 
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.colorScheme.surface,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
@@ -58,8 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.person, size: 32), label: 'Profile'),
         ],
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.black26,
+        selectedItemColor: theme.colorScheme.primary,
+        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
         showUnselectedLabels: true,
       ),
     );
@@ -74,45 +82,22 @@ class HomeContentScreen extends StatefulWidget {
 }
 
 class _HomeContentScreenState extends State<HomeContentScreen> {
-  @override
-  Future<String?> getUserNameFromUID(String uid) async {
-    try {
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('Users').doc(uid).get();
 
-      if (userDoc.exists) {
-        return userDoc['UserName']; // or userDoc['name']
-      } else {
-        print("User not found");
-        return null;
-      }
-    } catch (e) {
-      print("Error fetching user name: $e");
-      return null;
-    }
-  }
 
-  String? name;
-
-  @override
-  void initState() {
-    super.initState();
-    loadUserName();
-  }
-
-  void loadUserName() async {
-    String? result = await getUserNameFromUID(widget.uid);
-    setState(() {
-      name = result;
-    });
-  }
 
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final userData = userProvider.userData;
+    final name = (userData != null && userData['UserName'] != null && userData['UserName'].toString().trim().isNotEmpty)
+        ? userData['UserName']
+        : 'User';
+
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: Text("Home"),
-        backgroundColor: Colors.black,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
         elevation: 2,
       ),
@@ -122,41 +107,75 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${name}",
+              "Welcome, $name",
               style: TextStyle(
-                  color: Colors.white,
+                  color: theme.textTheme.bodyLarge?.color,
                   fontSize: 22,
                   fontWeight: FontWeight.bold),
             ),
             Text(
-              "Your Learning Roadmap:",
+              "Your Learning Roadmaps:",
               style: TextStyle(
-                  color: Colors.white,
+                  color: theme.textTheme.bodyLarge?.color,
                   fontSize: 22,
                   fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                RoadmapScreen(roadmap: roadmap)),
-                      );
-                    },
-                    child: RoadmapCard(
-                      title: "DSA",
-                      icon: Icons.book,
-                      progress: .1,
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('user_roadmaps')
+                  .where('user_id', isEqualTo: widget.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final docs = snapshot.data?.docs ?? [];
+                if (docs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No roadmap data available",
+                      style: TextStyle(
+                          color: theme.textTheme.bodyMedium?.color),
                     ),
+                  );
+                }
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: docs.map((doc) {
+                      final roadmap = doc.data() as Map<String, dynamic>;
+                      roadmap['id'] = doc.id;
+                      double progress = 0.0;
+                      if (roadmap['progress'] != null) {
+                        int completed = roadmap['progress'].where((item) => item['completed'] == true).length;
+                        int total = roadmap['progress'].length;
+                        progress = total > 0 ? completed / total : 0.0;
+                      }
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RoadmapScreen(
+                                roadmapData: roadmap,
+                              ),
+                            ),
+                          );
+                        },
+                        child: RoadmapCard(
+                          title: roadmap['topic'] ?? 'Roadmap',
+                          icon: Icons.book,
+                          progress: progress,
+                        ),
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
+                );
+              },
             ),
             SizedBox(height: 20),
             Center(
@@ -169,7 +188,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                 },
                 child: Text("Build with AI"),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent),
+                    backgroundColor: theme.colorScheme.primary),
               ),
             ),
             SizedBox(
@@ -181,13 +200,12 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            CommunityPage(userId: widget.uid)),
+                        builder: (context) => CommunityPage(userId: widget.uid)),
                   );
                 },
                 child: Text("My Communities"),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent),
+                    backgroundColor: theme.colorScheme.primary),
               ),
             ),
           ],
@@ -207,13 +225,13 @@ class RoadmapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       width: 220,
       margin: EdgeInsets.only(right: 16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.deepPurpleAccent]),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black54, blurRadius: 6, offset: Offset(3, 3)),
@@ -222,11 +240,11 @@ class RoadmapCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 40),
+          Icon(icon, color: theme.colorScheme.primary, size: 40),
           SizedBox(height: 10),
           Text(title,
               style: TextStyle(
-                  color: Colors.white,
+                  color: theme.textTheme.bodyLarge?.color,
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
           SizedBox(height: 10),
@@ -236,7 +254,7 @@ class RoadmapCard extends StatelessWidget {
                 height: 10,
                 width: 180,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: theme.colorScheme.onSurface.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -247,15 +265,15 @@ class RoadmapCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: progress < 0.5
-                        ? [Colors.redAccent, Colors.orangeAccent]
+                        ? [Color(0xFFE74C3C), Color(0xFFF5A623)]
                         : progress < 0.8
-                            ? [Colors.orangeAccent, Colors.yellowAccent]
-                            : [Colors.greenAccent, Colors.blueAccent],
+                            ? [Color(0xFFF5A623), Color(0xFFFFB347)]
+                            : [Color(0xFF27AE60), Color(0xFF4A90E2)],
                   ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blueAccent.withOpacity(0.5),
+                      color: theme.colorScheme.primary.withOpacity(0.5),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -271,7 +289,7 @@ class RoadmapCard extends StatelessWidget {
             builder: (context, value, child) {
               return Text("${value.toInt()}% Completed",
                   style: TextStyle(
-                      color: Colors.white70,
+                      color: theme.textTheme.bodyMedium?.color,
                       fontSize: 14,
                       fontWeight: FontWeight.bold));
             },
@@ -309,8 +327,9 @@ class _UploadScreenState extends State<UploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -320,7 +339,7 @@ class _UploadScreenState extends State<UploadScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 margin: EdgeInsets.all(20),
@@ -330,7 +349,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     Text(
                       "Upload Your File",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: theme.textTheme.bodyLarge?.color,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -339,7 +358,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     ElevatedButton(
                       onPressed: pickFile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: theme.colorScheme.primary,
                         padding:
                             EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       ),
@@ -349,12 +368,12 @@ class _UploadScreenState extends State<UploadScreen> {
                     fileName != null
                         ? Text(
                             "Selected: $fileName",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            style: TextStyle(color: theme.textTheme.bodyLarge?.color, fontSize: 16),
                             textAlign: TextAlign.center,
                           )
                         : Text(
                             "No file selected",
-                            style: TextStyle(color: Colors.white54),
+                            style: TextStyle(color: theme.textTheme.bodyMedium?.color),
                           ),
                     SizedBox(height: 20),
                     ElevatedButton(
@@ -362,7 +381,7 @@ class _UploadScreenState extends State<UploadScreen> {
                         // Upload function will be added later
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Color(0xFF22C55E), // Success green
                         padding:
                             EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       ),
@@ -443,12 +462,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: Text("ChatBot"),
         centerTitle: true,
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: theme.appBarTheme.backgroundColor,
       ),
       body: Column(
         children: [
@@ -574,60 +594,85 @@ class ProfileScreen extends StatelessWidget {
   final String uid;
   const ProfileScreen({Key? key, required this.uid}) : super(key: key);
 
-  final String userName = "Pardeep Lohia";
-  final String email = "pardeeplohia7098@gmail.com";
-  final int totalUploads = 24;
-  final String storageUsed = "1.2 GB";
-  final String lastUpload = "Feb 25, 2025";
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final userData = userProvider.userData;
+    final userName = userData?['name'] ?? 'User';
+    final email = userData?['email'] ?? 'user@example.com';
+    final phone = userData?['phone'] ?? 'Not provided';
+
     return Scaffold(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: Text("Profile"),
-        backgroundColor: Colors.black,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
               CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.grey,
-                child: Icon(Icons.person, size: 50, color: Colors.white),
+                backgroundColor: theme.colorScheme.onSurface.withOpacity(0.3),
+                child: Icon(Icons.person, size: 50, color: theme.colorScheme.onSurface),
               ),
               SizedBox(height: 10),
               Text(
                 userName,
                 style: TextStyle(
-                    color: Colors.white,
+                    color: theme.textTheme.bodyLarge?.color,
                     fontSize: 22,
                     fontWeight: FontWeight.bold),
               ),
               Text(
                 email,
-                style: TextStyle(color: Colors.white54, fontSize: 16),
+                style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 16),
+              ),
+              Text(
+                phone,
+                style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 16),
               ),
               SizedBox(height: 20),
-              Divider(color: Colors.white30),
+              Divider(color: theme.colorScheme.onSurface.withOpacity(0.3)),
               SizedBox(height: 20),
 
               // Stats Section
-              buildStatTile(
-                  Icons.upload_file, "Total Uploads", totalUploads.toString()),
-              buildStatTile(Icons.storage, "Storage Used", storageUsed),
-              buildStatTile(Icons.history, "Last Upload", lastUpload),
+              buildStatTile(context,
+                  Icons.upload_file, "Total Uploads", "0"),
+              buildStatTile(context, Icons.storage, "Storage Used", "0 MB"),
+              buildStatTile(context, Icons.history, "Last Upload", "None"),
 
+              SizedBox(height: 20),
+              // Theme Toggle
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Dark Mode", style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+                  Switch(
+                    value: Provider.of<ThemeProvider>(context).isDarkMode,
+                    onChanged: (value) {
+                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                    },
+                    activeColor: theme.colorScheme.primary,
+                  ),
+                ],
+              ),
               SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  // Logout or settings action
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Provider.of<UserProvider>(context, listen: false).logout();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: Color(0xFFDC2626), // Error red
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
                 child: Text("Logout"),
@@ -639,23 +684,24 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget buildStatTile(IconData icon, String title, String value) {
+  Widget buildStatTile(BuildContext context, IconData icon, String title, String value) {
+    final theme = Theme.of(context);
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blueAccent, size: 30),
+          Icon(icon, color: theme.colorScheme.primary, size: 30),
           SizedBox(width: 15),
           Expanded(
             child: Text(title,
-                style: TextStyle(color: Colors.white, fontSize: 18)),
+                style: TextStyle(color: theme.textTheme.bodyLarge?.color, fontSize: 18)),
           ),
-          Text(value, style: TextStyle(color: Colors.white70, fontSize: 18)),
+          Text(value, style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 18)),
         ],
       ),
     );

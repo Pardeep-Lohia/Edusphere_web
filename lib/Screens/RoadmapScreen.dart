@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/BaseUrl.dart';
 import 'package:flutter_application_1/Screens/RippleEffectOfRoadmapScreen.dart';
@@ -8,9 +9,9 @@ import 'package:graphview/GraphView.dart';
 import 'package:http/http.dart' as http;
 
 class RoadmapScreen extends StatefulWidget {
-  final List<Map<String, dynamic>> roadmap;
+  final Map<String, dynamic> roadmapData;
 
-  const RoadmapScreen({Key? key, required this.roadmap}) : super(key: key);
+  const RoadmapScreen({Key? key, required this.roadmapData}) : super(key: key);
 
   @override
   _RoadmapScreenState createState() => _RoadmapScreenState();
@@ -35,11 +36,12 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     graph.nodes.clear();
     graph.edges.clear();
 
-    widget.roadmap.sort((a, b) => a['day'].compareTo(b['day']));
+    final List<Map<String, dynamic>> roadmapList = List<Map<String, dynamic>>.from(widget.roadmapData['progress'] ?? []);
+    roadmapList.sort((a, b) => a['day'].compareTo(b['day']));
 
     Map<int, Node> nodeMap = {};
 
-    for (var step in widget.roadmap) {
+    for (var step in roadmapList) {
       Node node = Node.Id(step);
       graph.addNode(node);
       nodeMap[step['day']] = node;
@@ -58,11 +60,12 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   void showStepDetails(Map<String, dynamic> step) {
     print(step);
+    final List<Map<String, dynamic>> roadmapList = List<Map<String, dynamic>>.from(widget.roadmapData['progress'] ?? []);
     int prevDayIndex = step["day"] - 1;
 
-    if (prevDayIndex >= 0 && prevDayIndex < widget.roadmap.length) {
+    if (prevDayIndex >= 0 && prevDayIndex < roadmapList.length) {
       if (step["day"] == 1 ||
-          (widget.roadmap[prevDayIndex - 1]["completed"] == true ||
+          (roadmapList[prevDayIndex - 1]["completed"] == true ||
               step["completed"] == true)) {
         print("Accessing details for Day ${step['day']}"); // Debug statement
 
@@ -74,12 +77,35 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     }
   }
 
-  void updateStepStatus(String newStatus) {
+  Future<void> updateStepStatus(String newStatus) async {
     if (selectedStep == null) return;
 
     setState(() {
       selectedStep!['completed'] = newStatus == 'Done';
     });
+
+    // Update backend Firestore document
+    try {
+      final docRef = FirebaseFirestore.instance.collection('user_roadmaps').doc(widget.roadmapData['id']);
+
+      final data = (await docRef.get()).data();
+      if (data != null) {
+        List<dynamic> progress = data['progress'] ?? [];
+
+        // Update the completed status of the step with matching day
+        for (var step in progress) {
+          if (step['day'] == selectedStep!['day']) {
+            step['completed'] = newStatus == 'Done';
+            break;
+          }
+        }
+
+        // Update the document in Firestore
+        await docRef.update({'progress': progress});
+      }
+    } catch (e) {
+      print('Error updating step status: $e');
+    }
   }
 
   Color getStatusColor(bool completed) {
@@ -91,12 +117,13 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: const Text("Roadmap Overview"),
-        backgroundColor: Colors.black,
+        backgroundColor: theme.appBarTheme.backgroundColor,
       ),
       endDrawer: selectedStep != null
           ? _buildRightDrawer(context, selectedStep)
@@ -160,8 +187,9 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   Widget _buildRightDrawer(
       BuildContext context, Map<String, dynamic>? selectedStep) {
+    final theme = Theme.of(context);
     return Drawer(
-      backgroundColor: Colors.black87,
+      backgroundColor: theme.colorScheme.surface,
       width:
           selectedStep == null ? null : MediaQuery.of(context).size.width / 2,
       child: selectedStep == null
@@ -302,7 +330,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 // Update the status of the selected step to completed
                 setState(() {
                   selectedStep!['completed'] = true;
-                  print(widget.roadmap);
+                  print(widget.roadmapData['progress']);
                 });
               },
             ),
