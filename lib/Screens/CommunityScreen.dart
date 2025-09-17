@@ -222,6 +222,68 @@ class _CommunityPageState extends State<CommunityPage> {
     _loadCommunities();
   }
 
+  void _showJoinCommunityDialog() {
+    final TextEditingController joinController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text("Join Community",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: joinController,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: "Community ID or Invite Link",
+              labelStyle: TextStyle(color: Colors.white70),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: Colors.redAccent)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () async {
+                String input = joinController.text.trim();
+                if (input.isNotEmpty) {
+                  String communityId = input;
+                  // If input is a full invite link, extract communityId
+                  if (input.contains("/join/")) {
+                    communityId = input.split("/join/").last;
+                  }
+                  bool success = await service.CommunityService.joinCommunity(
+                      communityId, widget.userId);
+                  Navigator.pop(context);
+                  if (success) {
+                    _showSnackBar("Joined community successfully!");
+                    await _loadCommunities();
+                  } else {
+                    _showSnackBar("Failed to join community.");
+                  }
+                } else {
+                  _showSnackBar("Please enter a community ID or invite link.");
+                }
+              },
+              child: Text("Join", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _loadCommunities() async {
     setState(() => isLoading = true);
     final result =
@@ -330,12 +392,19 @@ class _CommunityPageState extends State<CommunityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
+  appBar: AppBar(
         title: Text("My Communities",
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.grey[900],
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.group_add, color: Colors.white),
+            onPressed: _showJoinCommunityDialog,
+            tooltip: 'Join Community',
+          ),
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(10),
