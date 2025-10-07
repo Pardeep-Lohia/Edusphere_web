@@ -442,7 +442,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         messages.add({
           "sender": "bot",
-          "message": "Error: Unable to connect to chatbot"
+          "message": e
         });
         _isTyping = false;
       });
