@@ -442,7 +442,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         messages.add({
           "sender": "bot",
-          "message": e
+          "message": e.toString()
         });
         _isTyping = false;
       });
