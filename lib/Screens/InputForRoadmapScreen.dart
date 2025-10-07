@@ -50,7 +50,7 @@ class _InputScreenState extends State<InputScreen> {
     // show shimmer screen immediately
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const RippleEffectOfRoadmapScreen()),
+      MaterialPageRoute(builder: (context) => RoadmapLoadingScreen()),
     );
 
     try {
