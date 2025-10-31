@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 class APIConfig {
   static String getBaseUrl() {
-    const String deployedUrl = "https://edusphere-ruby-two.vercel.app/";
+    const String deployedUrl = "https://edusphere-ruby-two.vercel.app";
 
     return deployedUrl;
   }
