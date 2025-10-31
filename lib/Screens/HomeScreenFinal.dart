@@ -428,7 +428,7 @@ class _ChatScreenState extends State<ChatScreen> {
         body: jsonEncode({"message": userMessage}),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode <= 200 && response.statusCode > 300) {
         final responseData = jsonDecode(response.body);
         setState(() {
           messages
